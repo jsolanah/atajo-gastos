@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --fondo: #f1f5f9;
+  --fondo-tarjeta: #ffffff;
+  --texto: #0f172a;
+  --texto-suave: #64748b;
+  --borde: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #020617;
+    --fondo-tarjeta: #0f172a;
+    --texto: #f1f5f9;
+    --texto-suave: #94a3b8;
+    --borde: #1e293b;
+  }
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-tarjeta: var(--fondo-tarjeta);
+  --color-texto: var(--texto);
+  --color-suave: var(--texto-suave);
+  --color-borde: var(--borde);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background-color: var(--fondo);
+}
+
+body {
+  background-color: var(--fondo);
+  color: var(--texto);
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="color"] {
+  cursor: pointer;
+}
+
+/* -----------------------------------------------------------------------------
+ * Mostrar / ocultar el dinero (botón 👁)
+ *
+ * Convención del proyecto: todo importe se pinta en un elemento con
+ * `tabular-nums` (los que ya lo tienen de serie, o envueltos en un
+ * `<span className="tabular-nums">` cuando van dentro de una frase).
+ *
+ * Con el dinero oculto esos elementos se vacían con `visibility` y no con
+ * `blur`: así no se adivina ni el número de dígitos, y al alternar el botón la
+ * página no da ningún salto.
+ * -------------------------------------------------------------------------- */
+[data-oculto] .tabular-nums {
+  visibility: hidden;
+}
