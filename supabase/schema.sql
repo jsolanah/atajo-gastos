@@ -225,6 +225,40 @@ alter table public.movimientos   enable row level security;
 alter table public.ajustes       enable row level security;
 
 -- -----------------------------------------------------------------------------
+-- Permisos de la Data API: NO LOS QUITES
+--
+-- Desde el 30 de octubre de 2026 Supabase dejó de dar por hecho estos permisos:
+-- una tabla nueva en `public` ya no se expone a la Data API (lo que usa
+-- `supabase-js`) hasta que se le concede el acceso a mano. El síntoma es un
+--
+--   42501 · permission denied for table cuentas
+--
+-- o, si la tabla no aparece por nada,
+--
+--   PGRST205 · Could not find the table … in the schema cache
+--
+-- Se ejecutan al final porque el `grant … on all tables` solo ve las tablas que
+-- ya existen, así que tienen que ir después de los `create table`.
+--
+-- Sobre la seguridad: dar SELECT a `anon` NO abre los datos. El RLS de arriba
+-- está activado y sin políticas, así que la clave anónima no ve ni una fila
+-- aunque tenga el permiso. Lo que sí lee datos es `service_role`, que la app
+-- usa solo desde el servidor (`src/lib/supabase/server.ts`) y nunca llega al
+-- navegador. Los permisos dicen "qué puede hacer este rol"; el RLS dice
+-- "qué filas ve". hacen falta los dos.
+--
+-- `grant all tables` incluye las que se añadan después, así que no hay que
+-- repetirlo por cada tabla nueva.
+-- -----------------------------------------------------------------------------
+grant usage on schema public to anon, authenticated, service_role;
+
+grant select, insert, update, delete on all tables in schema public
+  to anon, authenticated, service_role;
+
+grant usage, select on all sequences in schema public
+  to anon, authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
 -- Si YA TENÍAS la base de datos creada con una versión anterior de este
 -- fichero, `create table if not exists` no hace nada y el tipo 'efectivo' se te
 -- quedaría rejecting. Ejecuta esto UNA vez (es idempotente):

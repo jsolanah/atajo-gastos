@@ -24,6 +24,14 @@ préstamos) con un **Atajo de iOS** que registra cada gasto sin abrir la web.
 - **Los tests no llevan datos reales.** Los bancos, los saldos y el préstamo de
   `src/lib/*.test.ts` son inventados y redondos, precisamente porque el repo se publica.
 
+> [!IMPORTANT]
+> **Si te sale `42501 · permission denied for table …` o `PGRST205 · Could not find the table`**
+> al arrancar, es que faltan los permisos de la Data API. Se arregla ejecutando el bloque `grant`
+> del final de `supabase/schema.sql`. No es un fallo tuyo: Supabase cambió el 30 de octubre de
+> 2026 y ahora las tablas nuevas no se exponen solas. Está explicado en detalle más abajo, en
+> [Permisos y el cambio de Supabase](#permisos-y-el-cambio-de-supabase).
+
+
 ---
 
 ## 1. Puesta en marcha
@@ -374,6 +382,51 @@ post, en un README o en un issue equivale a publicar tus cuentas y movimientos.
 - Si vas a compartir el enlace, ponle antes un PIN en un middleware (ver arriba).
 - Y no pongas la URL de tu despliegue en este repositorio: aunque sea privado hoy, en cuanto pase a
   público queda expuesto.
+
+### Permisos y el cambio de Supabase
+
+Hay dos capas que se confunden mucho, y el cambio de Supabase del **30 de octubre de 2026** las ha
+puesto de manifiesto:
+
+| Capa | Dice | Qué es |
+| --- | --- | --- |
+| **Permisos** (`grant`) | *qué puede hacer este rol* | Si la Data API ve siquiera la tabla |
+| **RLS** (`enable row level security`) | *qué filas ve ese rol* | Si puede leer contenido concreto |
+
+Hasta ahora, crear una tabla en `public` le daba los permisos automáticamente y solo había que
+pensarse el RLS. Desde el 30 de octubre de 2026 **eso ya no pasa**: una tabla nueva existe, pero la
+Data API no la ve hasta que le haces un `grant` explícito. Los síntomas son:
+
+```
+42501 · permission denied for table cuentas
+PGRST205 · Could not find the table … in the schema cache
+```
+
+Por eso `schema.sql` termina con el bloque `grant`. **No se puede borrar**: sin él, la app no ve
+ninguna tabla y el error es críptico.
+
+```sql
+grant usage on schema public to anon, authenticated, service_role;
+
+grant select, insert, update, delete on all tables in schema public
+  to anon, authenticated, service_role;
+
+grant usage, select on all sequences in schema public
+  to anon, authenticated, service_role;
+```
+
+Tres apuntes:
+
+- **Van al final** porque `grant … on all tables` solo ve las tablas que ya existen, así que tienen
+  que ir después de los `create table`.
+- **Cubren las tablas futuras**, así que no hay que repetirlos por cada tabla nueva.
+- **Dar permisos a `anon` no abre tus datos.** El RLS está activado y sin políticas, así que la clave
+  anónima no lee ni una fila aunque tenga el permiso. El único rol que lee es `service_role`, que la
+  app usa solo desde el servidor.
+
+**Si ya tienes la base creada y te funciona**, no tienes que hacer nada: el cambio afecta a las
+tablas *nuevas*, las que ya tienes conservan sus permisos. Solo ejecuta el bloque de arriba si
+empiezas a añadir tablas nuevas a partir de ahora, o si te sale alguno de esos errores.
 
 ### Qué revisar antes de publicar el repositorio
 
