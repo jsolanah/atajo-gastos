@@ -227,9 +227,17 @@ alter table public.ajustes       enable row level security;
 -- -----------------------------------------------------------------------------
 -- Permisos de la Data API: NO LOS QUITES
 --
--- Desde el 30 de octubre de 2026 Supabase dejó de dar por hecho estos permisos:
--- una tabla nueva en `public` ya no se expone a la Data API (lo que usa
--- `supabase-js`) hasta que se le concede el acceso a mano. El síntoma es un
+-- Estos tres `grant` parecen innecesarios porque, hasta ahora, crear una tabla
+-- en `public` los daba por hecho. Supabase está dejando de hacerlo:
+--
+--   · desde el 30 de mayo de 2026, ya es el comportamiento por defecto en los
+--     proyectos NUEVOS (rollout gradual de unas semanas);
+--   · el 30 de octubre de 2026 se aplica también a los proyectos que YA existen.
+--
+-- Mientras tanto, si creaste tu proyecto antes, tus tablas ya tienen sus
+-- permisos y todo funciona. Cuando llegue ese día, las tablas nuevas que crees
+-- dejan de exponerse solas a la Data API (lo que usa `supabase-js`) hasta que
+-- se les concede el acceso a mano. Los síntomas son un
 --
 --   42501 · permission denied for table cuentas
 --
@@ -245,7 +253,7 @@ alter table public.ajustes       enable row level security;
 -- aunque tenga el permiso. Lo que sí lee datos es `service_role`, que la app
 -- usa solo desde el servidor (`src/lib/supabase/server.ts`) y nunca llega al
 -- navegador. Los permisos dicen "qué puede hacer este rol"; el RLS dice
--- "qué filas ve". hacen falta los dos.
+-- "qué filas ve". Hacen falta los dos.
 --
 -- `grant all tables` incluye las que se añadan después, así que no hay que
 -- repetirlo por cada tabla nueva.

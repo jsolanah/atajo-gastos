@@ -27,9 +27,15 @@ préstamos) con un **Atajo de iOS** que registra cada gasto sin abrir la web.
 > [!IMPORTANT]
 > **Si te sale `42501 · permission denied for table …` o `PGRST205 · Could not find the table`**
 > al arrancar, es que faltan los permisos de la Data API. Se arregla ejecutando el bloque `grant`
-> del final de `supabase/schema.sql`. No es un fallo tuyo: Supabase cambió el 30 de octubre de
-> 2026 y ahora las tablas nuevas no se exponen solas. Está explicado en detalle más abajo, en
-> [Permisos y el cambio de Supabase](#permisos-y-el-cambio-de-supabase).
+> del final de `supabase/schema.sql`, que ya viene incluido.
+>
+> No es un fallo tuyo ni de este repo: Supabase está dejando de dar por hecho esos permisos en
+> las tablas nuevas. Ya es el comportamiento por defecto en los proyectos que se crean **desde el
+> 30 de mayo de 2026**, y el **30 de octubre de 2026** se aplica a los proyectos que ya existían.
+> Si tu proyecto es anterior a esas fechas, tus tablas conservan sus permisos y todo sigue
+> funcionando con normalidad.
+>
+> Más detalle en [Permisos y el cambio de Supabase](#permisos-y-el-cambio-de-supabase).
 
 
 ---
@@ -385,8 +391,8 @@ post, en un README o en un issue equivale a publicar tus cuentas y movimientos.
 
 ### Permisos y el cambio de Supabase
 
-Hay dos capas que se confunden mucho, y el cambio de Supabase del **30 de octubre de 2026** las ha
-puesto de manifiesto:
+Hay dos capas que se confunden mucho, y el cambio de Supabase sobre los permisos las ha puesto de
+manifiesto:
 
 | Capa | Dice | Qué es |
 | --- | --- | --- |
@@ -394,8 +400,15 @@ puesto de manifiesto:
 | **RLS** (`enable row level security`) | *qué filas ve ese rol* | Si puede leer contenido concreto |
 
 Hasta ahora, crear una tabla en `public` le daba los permisos automáticamente y solo había que
-pensarse el RLS. Desde el 30 de octubre de 2026 **eso ya no pasa**: una tabla nueva existe, pero la
-Data API no la ve hasta que le haces un `grant` explícito. Los síntomas son:
+pensarse el RLS. Supabase ha anunciado que eso deja de hacerse, en dos fases:
+
+| Desde | A qué proyectos |
+| --- | --- |
+| **30 de mayo de 2026** | Proyectos **nuevos** (rollout gradual de unas semanas) |
+| **30 de octubre de 2026** | Proyectos que **ya existían** |
+
+A partir de entonces, una tabla nueva existe pero la Data API no la ve hasta que le haces un `grant`
+explícito. Los síntomas son:
 
 ```
 42501 · permission denied for table cuentas
@@ -415,7 +428,7 @@ grant usage, select on all sequences in schema public
   to anon, authenticated, service_role;
 ```
 
-Tres apuntes:
+Cuatro apuntes:
 
 - **Van al final** porque `grant … on all tables` solo ve las tablas que ya existen, así que tienen
   que ir después de los `create table`.
@@ -423,10 +436,9 @@ Tres apuntes:
 - **Dar permisos a `anon` no abre tus datos.** El RLS está activado y sin políticas, así que la clave
   anónima no lee ni una fila aunque tenga el permiso. El único rol que lee es `service_role`, que la
   app usa solo desde el servidor.
-
-**Si ya tienes la base creada y te funciona**, no tienes que hacer nada: el cambio afecta a las
-tablas *nuevas*, las que ya tienes conservan sus permisos. Solo ejecuta el bloque de arriba si
-empiezas a añadir tablas nuevas a partir de ahora, o si te sale alguno de esos errores.
+- **Si tu base ya funciona, no hagas nada.** El cambio afecta a las tablas *nuevas*: las que ya
+  tienes conservan sus permisos y siguen alcanzables. Ejecuta el bloque a mano solo si empiezas a
+  añadir tablas nuevas, o si te sale alguno de esos errores.
 
 ### Qué revisar antes de publicar el repositorio
 
