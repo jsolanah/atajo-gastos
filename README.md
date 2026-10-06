@@ -48,6 +48,20 @@ préstamos y movimientos desde la web. Al final del fichero tienes, commented, u
 categorías de muestra y el patrón de SQL para meter una cuenta con su saldo, por si prefieres no
 empezar de cero.
 
+#### ¿Quieres verla llena antes de empezar?
+
+Opcional: después de `schema.sql`, ejecuta `supabase/demo.sql`. Inserta **datos inventados**
+(4 cuentas, 19 categorías, un préstamo de ejemplo y unos meses de movimientos) para que puedas abrir
+la app y ver los gráficos con algo dentro sin teclear nada.
+
+```bash
+# borra los datos de ejemplo (el orden de las tablas lo impone el fichero)
+# en Supabase: SQL Editor -> New query -> pega supabase/reset.sql -> Run
+```
+
+**Son ficticios.** Antes de meter tus cuentas de verdad, bórralos con el `truncate` que lleva al
+principio del propio `demo.sql`.
+
 ### 1.3. Variables de entorno
 
 ```bash

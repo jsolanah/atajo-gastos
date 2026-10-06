@@ -346,8 +346,10 @@ function AvisoSinConfigurar() {
       <Tarjeta titulo="Para empezar">
         <ol className="list-decimal space-y-2 pl-5 text-sm text-suave">
           <li>
-            Ejecuta <code>supabase/schema.sql</code> y después <code>supabase/seed.sql</code> en el
-            SQL Editor de Supabase.
+            Ejecuta <code>supabase/schema.sql</code> en el SQL Editor de Supabase. Crea todas las
+            tablas y no deja ningún dato. Si quieres verla llena antes de meter los tuyos, ejecuta
+            después <code>supabase/demo.sql</code> (datos inventados; se borran con el
+            <code>truncate</code> que lleva al final).
           </li>
           <li>
             Copia <code>.env.example</code> a <code>.env.local</code> y pega tu URL y tu service
